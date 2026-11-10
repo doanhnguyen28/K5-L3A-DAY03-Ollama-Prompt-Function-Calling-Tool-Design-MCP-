@@ -100,8 +100,27 @@ def case_messages(case: dict[str, Any]) -> list[dict[str, str]]:
 def normalize_value(value: Any) -> Any:
     if isinstance(value, str):
         return value.strip().lower()
+
+    if isinstance(value, dict):
+        return {
+            key: normalize_value(item)
+            for key, item in value.items()
+        }
+
     if isinstance(value, list):
-        return sorted(normalize_value(item) for item in value)
+        normalized = [normalize_value(item) for item in value]
+
+        # Giữ thứ tự danh sách dữ liệu có cấu trúc.
+        # Thứ tự quan trọng với dedupe_sources keep=first/last.
+        if any(isinstance(item, (dict, list)) for item in normalized):
+            return normalized
+
+        # Giữ hành vi cũ với danh sách giá trị đơn giản.
+        try:
+            return sorted(normalized)
+        except TypeError:
+            return normalized
+
     return value
 
 
