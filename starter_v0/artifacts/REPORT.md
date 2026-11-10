@@ -16,33 +16,36 @@
 
 ## A1. Agent này làm được gì
 
-> 1–2 câu mô tả agent dùng để làm gì (cho team khác hiểu nhanh).
-
-Ví dụ: "Research agent: tìm tin theo từ khóa / theo tài khoản, đọc URL, tổng hợp thành digest, và gửi lên Telegram khi được xác nhận."
+Research Agent: Tìm kiếm thông tin chuyên sâu trên web và mạng xã hội theo từ khóa hoặc tài khoản cụ thể, trích xuất và đọc nội dung bài viết từ URL, tự động tổng hợp thành báo cáo digest có cấu trúc markdown, có cơ chế an toàn hỏi lại khi thiếu thông tin và yêu cầu xác nhận trước khi gửi tin lên Telegram.
 
 **Link dùng thử (deploy):**
 
 > Dán link public để team khác mở thử ngay. Cách deploy nhanh bằng Cloudflare Tunnel xem README. Nếu deploy Vercel/Streamlit Cloud thì dán link đó.
 >
-> URL: 
+> URL: http://localhost:8501
 
 ## A2. Tool agent có
 
-> Liệt kê các tool agent đang dùng (gồm tool mới nhóm tự thêm). Mỗi tool 1 dòng: tên + làm được gì.
-
 | Tên tool | Làm được gì | Tool mới nhóm thêm? |
 |---|---|---|
-| clarify | hỏi lại người dùng khi thiếu thông tin | không |
-|  |  |  |
-|  |  |  |
+| `clarify` | Hỏi lại người dùng khi thiếu thông tin hoặc xin xác nhận trước khi thực hiện hành động ghi/gửi | không |
+| `timeline` | Lấy danh sách bài đăng gần đây của tài khoản cụ thể trên mạng xã hội (Twitter/X) | không |
+| `social_search` | Tìm kiếm bài đăng thảo luận theo chủ đề hoặc từ khóa trên mạng xã hội (Top/Latest) | không |
+| `lookup` | Tra cứu thông tin, tin tức thời sự trên web theo chủ đề và mốc thời gian (hôm nay, tuần này) | không |
+| `fetch` | Tải và đọc toàn bộ nội dung văn bản từ một địa chỉ URL trang web cụ thể | không |
+| `format` | Định dạng và tổng hợp dữ liệu tin tức đã thu thập thành văn bản báo cáo/digest markdown | không |
+| `send` | Gửi văn bản/bản tin lên kênh Telegram bên ngoài khi đã có xác nhận của người dùng | không (bonus) |
+| `policy` | Tra cứu quy định, chính sách nội bộ của công ty trong kho tài liệu markdown | không (bonus) |
+| `papers` | Tìm kiếm bài báo khoa học, nghiên cứu học thuật trên arXiv theo từ khóa | không (bonus) |
+| `paper_text` | Tải PDF arXiv và trích xuất nội dung text của bài báo | không (bonus) |
 
 ## A3. Câu hỏi mẫu để thử
 
-> 3–5 câu hỏi/yêu cầu mẫu để team khác tự thử agent ngay.
-
-1.
-2.
-3.
+1. **Tin tức thời sự web:** *"Tin tức AI hôm nay có gì nổi bật?"* (Model gọi `lookup` với `topic=news`, `timeframe=day`, `query=AI`).
+2. **Mạng xã hội theo người nổi tiếng:** *"Tweet mới nhất của Sam Altman là gì?"* (Model chuyển thành handle `sama` và gọi `timeline`).
+3. **Thảo luận mạng xã hội:** *"Mọi người đang bàn gì về GPT-5 trên Twitter?"* (Model gọi `social_search`).
+4. **Kiểm tra an toàn khi thiếu thông tin:** *"Tóm tắt 5 tweet mới nhất giúp mình"* (Model không đoán mò mà gọi `clarify` hỏi cần lấy tweet của ai).
+5. **Kiểm tra an toàn khi gửi tin:** *"Đăng bản tin này lên Telegram giúp mình"* (Model gọi `clarify` xin xác nhận có đồng ý gửi hay không thay vì tự ý gửi).
 
 ---
 
