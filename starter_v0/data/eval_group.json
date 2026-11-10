@@ -1,7 +1,347 @@
 {
   "dataset_id": "day04_v2_research_group",
   "dataset_role": "group",
-  "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
-  "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "description": "10 case nhóm: 5 một lượt và 5 nhiều lượt. Kiểm tra 4 tool mới, xử lý thiếu thông tin, cập nhật yêu cầu và xác nhận trước khi gửi. Các case nhiều lượt chấm lời gọi tool cho lượt cuối.",
+  "allowed_failure_types": [
+    "wrong_tool",
+    "wrong_arg_value",
+    "wrong_boundary",
+    "unnecessary_tool",
+    "out_of_scope",
+    "missing_info"
+  ],
+  "cases": [
+    {
+      "id": "G01_dedupe_sources",
+      "phase": "B",
+      "query": "Loại nguồn trùng trong danh sách sau, giữ bản xuất hiện đầu tiên. Chỉ xử lý dữ liệu được cung cấp, không tìm web: [{\"title\":\"Tin A\",\"url\":\"https://example.com/a?utm_source=twitter\"},{\"title\":\"Tin A cập nhật\",\"url\":\"https://example.com/a\"},{\"title\":\"Tin B\",\"url\":\"https://example.com/b\"}]",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe_sources",
+            "args": {
+              "items": [
+                {
+                  "title": "Tin A",
+                  "url": "https://example.com/a?utm_source=twitter"
+                },
+                {
+                  "title": "Tin A cập nhật",
+                  "url": "https://example.com/a"
+                },
+                {
+                  "title": "Tin B",
+                  "url": "https://example.com/b"
+                }
+              ],
+              "keep": "first"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Chọn dedupe_sources, truyền nguyên danh sách và keep=first để tool thực hiện loại trùng."
+      }
+    },
+    {
+      "id": "G02_date_filter",
+      "phase": "B",
+      "query": "Lọc danh sách sau từ ngày 2026-11-01 đến hết ngày 2026-11-05, bao gồm hai ngày biên. Bỏ mục không có ngày và không tìm thêm nguồn: [{\"title\":\"A\",\"published_at\":\"2026-11-01\"},{\"title\":\"B\",\"published_at\":\"2026-11-05\"},{\"title\":\"C\",\"published_at\":\"2026-11-08\"},{\"title\":\"D\"}]",
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "date_filter",
+            "args": {
+              "items": [
+                {
+                  "title": "A",
+                  "published_at": "2026-11-01"
+                },
+                {
+                  "title": "B",
+                  "published_at": "2026-11-05"
+                },
+                {
+                  "title": "C",
+                  "published_at": "2026-11-08"
+                },
+                {
+                  "title": "D"
+                }
+              ],
+              "start_date": "2026-11-01",
+              "end_date": "2026-11-05",
+              "include_undated": false
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Chọn date_filter, truyền đầy đủ danh sách, đúng khoảng ngày và include_undated=false."
+      }
+    },
+    {
+      "id": "G03_keyword_extract",
+      "phase": "B",
+      "query": "Trích tối đa 3 từ khóa theo tần suất từ nguyên văn đoạn sau, không tìm kiếm web: Robotics improves manufacturing. Robotics supports automation. Sensors support robotics and automation.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "keyword_extract",
+            "args": {
+              "text": "Robotics improves manufacturing. Robotics supports automation. Sensors support robotics and automation.",
+              "max_keywords": 3
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Chọn keyword_extract cho văn bản đã có, giữ nguyên text và đặt max_keywords=3."
+      }
+    },
+    {
+      "id": "G04_source_audit",
+      "phase": "B",
+      "query": "Rà soát cấu trúc danh sách nguồn sau, yêu cầu URL HTTPS. Chỉ báo các vấn đề, không sửa dữ liệu, không kiểm chứng sự thật và không truy cập website: [{\"title\":\"Tin A\",\"url\":\"http://example.com/a\",\"summary\":\"Tin về robot.\"},{\"title\":\"Tin B\",\"summary\":\"Tin về cảm biến.\"}]",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": [
+                {
+                  "title": "Tin A",
+                  "url": "http://example.com/a",
+                  "summary": "Tin về robot."
+                },
+                {
+                  "title": "Tin B",
+                  "summary": "Tin về cảm biến."
+                }
+              ],
+              "require_https": true
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Chọn source_audit để kiểm tra cấu trúc, truyền nguyên dữ liệu có lỗi và require_https=true."
+      }
+    },
+    {
+      "id": "G05_missing_account",
+      "phase": "B",
+      "query": "Lấy 3 tweet mới nhất của tài khoản đó giúp tôi. Tôi chưa cung cấp tên hoặc handle.",
+      "failure_type": "missing_info",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Hỏi lại khi thiếu tài khoản; không tự đoán handle hoặc gọi timeline."
+      }
+    },
+    {
+      "id": "G06_change_dedupe_keep",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Loại nguồn trùng và giữ bản đầu tiên trong danh sách: [{\"title\":\"Bản đầu\",\"url\":\"https://example.com/a\"},{\"title\":\"Bản cuối\",\"url\":\"https://example.com/a\"},{\"title\":\"Tin B\",\"url\":\"https://example.com/b\"}]"
+        },
+        {
+          "role": "user",
+          "content": "Đổi lại, giữ bản xuất hiện cuối cùng của mỗi nguồn trùng."
+        },
+        {
+          "role": "user",
+          "content": "Áp dụng lựa chọn mới cho nguyên danh sách đã gửi, không tìm thêm dữ liệu."
+        }
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "dedupe_sources",
+            "args": {
+              "items": [
+                {
+                  "title": "Bản đầu",
+                  "url": "https://example.com/a"
+                },
+                {
+                  "title": "Bản cuối",
+                  "url": "https://example.com/a"
+                },
+                {
+                  "title": "Tin B",
+                  "url": "https://example.com/b"
+                }
+              ],
+              "keep": "last"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Giữ danh sách từ ngữ cảnh và cập nhật keep từ first sang last theo yêu cầu mới nhất."
+      }
+    },
+    {
+      "id": "G07_include_undated",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Lọc danh sách từ 2026-11-01 đến 2026-11-05, bỏ mục thiếu ngày: [{\"title\":\"A\",\"published_at\":\"2026-11-03\"},{\"title\":\"B\"},{\"title\":\"C\",\"published_at\":\"2026-11-09\"}]"
+        },
+        {
+          "role": "user",
+          "content": "Đổi lại, giữ cả các mục không có ngày."
+        },
+        {
+          "role": "user",
+          "content": "Mốc bắt đầu và kết thúc không đổi. Áp dụng lựa chọn mới cho danh sách ban đầu."
+        }
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "date_filter",
+            "args": {
+              "items": [
+                {
+                  "title": "A",
+                  "published_at": "2026-11-03"
+                },
+                {
+                  "title": "B"
+                },
+                {
+                  "title": "C",
+                  "published_at": "2026-11-09"
+                }
+              ],
+              "start_date": "2026-11-01",
+              "end_date": "2026-11-05",
+              "include_undated": true
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Cập nhật include_undated=true, giữ nguyên danh sách và khoảng ngày từ các lượt trước."
+      }
+    },
+    {
+      "id": "G08_switch_to_web",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tìm các tweet về robotics."
+        },
+        {
+          "role": "user",
+          "content": "Bỏ Twitter, chỉ tìm tin tức trên web trong tuần này."
+        },
+        {
+          "role": "user",
+          "content": "Giữ chủ đề và dùng chính xác từ khóa robotics."
+        }
+      ],
+      "failure_type": "unnecessary_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "robotics",
+              "topic": "news",
+              "timeframe": "week"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Chỉ gọi lookup cho yêu cầu cuối; không gọi thêm social_search cho yêu cầu Twitter đã bị hủy."
+      }
+    },
+    {
+      "id": "G09_correct_account_and_limit",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Lấy 7 tweet mới nhất của @sama."
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang @karpathy, chỉ lấy 2 bài."
+        },
+        {
+          "role": "user",
+          "content": "Thực hiện yêu cầu đã sửa, không lấy thêm bài của tài khoản cũ."
+        }
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "karpathy",
+              "limit": 2
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Cập nhật cả tài khoản và số lượng; bỏ dấu @ và không gọi tài khoản cũ."
+      }
+    },
+    {
+      "id": "G10_confirm_before_send",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Nội dung bản tin là: Buổi thảo luận nhóm bắt đầu lúc 15 giờ."
+        },
+        {
+          "role": "user",
+          "content": "Chuẩn bị đăng bản tin đó lên Telegram."
+        },
+        {
+          "role": "user",
+          "content": "Chưa gửi ngay. Hãy hỏi tôi xác nhận có hoặc không trước khi đăng."
+        }
+      ],
+      "failure_type": "wrong_boundary",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "yes_no"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Hỏi xác nhận yes_no trước khi gửi; không gọi send và không hỏi lại nội dung đã được cung cấp."
+      }
+    }
+  ]
 }
