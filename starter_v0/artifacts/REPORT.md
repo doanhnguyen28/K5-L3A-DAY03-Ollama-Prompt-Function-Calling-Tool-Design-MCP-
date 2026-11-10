@@ -6,19 +6,23 @@
 
 ## Team
 
-- Team:
-- Members:
-- Provider/model:
+- Team: Ollama
+- Members: 
+Nguyễn Đăng Doanh - 2A202603597
+Đoàn Văn Tú - 2A202603595
+Trần Đức Mạnh - 2A202603615
+Lê Anh Quân - 2A202603576
+
+- Provider/model: `openrouter` / `openai/gpt-4o-mini`
 
 ---
 
-# PHẦN A — Giới thiệu agent
+# PHẦN A — Giới thiệu. agent
 
-## A1. Agent này làm được gì
+## A1. Mục tiêu và chức năng
 
-> 1–2 câu mô tả agent dùng để làm gì (cho team khác hiểu nhanh).
+Research Agent hỗ trợ tìm tin trên web và Twitter/X, đọc nội dung từ URL, loại nguồn trùng, lọc theo ngày, trích từ khóa, rà soát cấu trúc nguồn và tổng hợp kết quả thành bản tin. Agent tự chọn công cụ phù hợp, hỏi lại khi thiếu thông tin, cập nhật yêu cầu qua nhiều lượt hội thoại và xin xác nhận trước khi gửi nội dung ra ngoài. Các bước xử lý danh sách nguồn được thực hiện cục bộ trên dữ liệu đã có, không cần thêm API hoặc tìm nguồn mới.
 
-Ví dụ: "Research agent: tìm tin theo từ khóa / theo tài khoản, đọc URL, tổng hợp thành digest, và gửi lên Telegram khi được xác nhận."
 
 **Link dùng thử (deploy):**
 
@@ -26,60 +30,135 @@ Ví dụ: "Research agent: tìm tin theo từ khóa / theo tài khoản, đọc 
 >
 > URL: 
 
-## A2. Tool agent có
+## A2. Công cụ trong phạm vi báo cáo
 
-> Liệt kê các tool agent đang dùng (gồm tool mới nhóm tự thêm). Mỗi tool 1 dòng: tên + làm được gì.
-
-| Tên tool | Làm được gì | Tool mới nhóm thêm? |
+| Tool | Chức năng | Nhóm bổ sung |
 |---|---|---|
-| clarify | hỏi lại người dùng khi thiếu thông tin | không |
-|  |  |  |
-|  |  |  |
+| `clarify` | Hỏi thông tin còn thiếu hoặc xin xác nhận bằng `text`, `yes_no`, `choice`. | Không |
+| `timeline` | Lấy bài đăng của một tài khoản Twitter/X; nhận `screenname`, `limit`. | Không |
+| `social_search` | Tìm bài đăng theo chủ đề, chọn `Latest` hoặc `Top`. | Không |
+| `lookup` | Tìm trên web, tách chủ đề, loại tin và khoảng thời gian. | Không |
+| `fetch` | Đọc nội dung từ URL cụ thể. | Không |
+| `format` | Định dạng danh sách kết quả thành bản tin Markdown. | Không |
+| `dedupe_sources` | Chuẩn hóa khóa nhận diện nguồn để loại trùng; giữ bản đầu hoặc cuối. | Có |
+| `date_filter` | Lọc theo khoảng ngày, bao gồm hai ngày biên; tùy chọn giữ mục không có ngày đọc được. | Có |
+| `keyword_extract` | Trích từ khóa theo tần suất từ văn bản có sẵn. | Có |
+| `source_audit` | Phát hiện thiếu trường, URL không hợp lệ, URL trùng và HTTP khi yêu cầu HTTPS. | Có |
 
-## A3. Câu hỏi mẫu để thử
+## A3. Yêu cầu mẫu
 
-> 3–5 câu hỏi/yêu cầu mẫu để team khác tự thử agent ngay.
+1. “Lấy 3 tweet mới nhất của @sama.”
+2. “Tìm tin AI hôm nay trên web và tìm thêm tweet về AI.”
+3. “Tóm tắt bài viết này hộ tôi.” — Khi chưa có URL, agent cần hỏi lại.
+4. “Loại nguồn trùng, giữ bản cuối: [{"title":"Bản đầu","url":"https://example.com/a"},{"title":"Bản cuối","url":"https://example.com/a"}].”
+5. “Rà soát cấu trúc nguồn này và yêu cầu HTTPS; chỉ báo lỗi, không sửa dữ liệu: [{"title":"Tin A","url":"http://example.com/a","summary":"Tin về robot."}].”
 
-1.
-2.
-3.
 
----
-
-# PHẦN B — Chi tiết / Bằng chứng
+# PHẦN B — Chi tiết và bằng chứng
 
 ## B1. Version Evidence
 
-Fill from `artifacts/version_log.csv` and `runs/*.json`.
+Bộ base gồm **20 case: 14 một lượt và 6 nhiều lượt**.
 
-| Version | Changed Artifact | Hypothesis | Metric Before | Metric After | Run File |
-|---|---|---|---:|---:|---|
-| v0 | baseline | Đo hành vi chưa tối ưu trước khi sửa | - | 0.70 | runs/v0_B_base_openrouter_20261110T100630816017.json |
-| v1 | system_prompt.md | Bỏ 3 chỉ dẫn xấu, thêm clarify khi thiếu info và confirm khi gửi | 0.70 | 0.95 | runs/v1_B_base_openrouter_20261110T102046612325.json |
-| v2 | tools.yaml | Viết lại description chi tiết (when to use/not) và convention tham số | 0.95 | 0.85 | runs/v2_B_base_openrouter_20261110T103033842772.json |
-| v3 | system_prompt.md | Phân định rõ clarify vs timeline, rút gọn query lookup | 0.85 | 1.00 | runs/v3_B_base_openrouter_20261110T105653574448.json |
+| Phiên bản/run | PASS | Case accuracy | Tool routing | Argument accuracy | Multiturn accuracy |
+|---|---:|---:|---:|---:|---:|
+| v0 | 14/20 | 70% | 75% | 70% | 100.00% |
+| v1 | 19/20 | 95% | 95% | 95% | 83.33% |
+| v2 | 17/20 | 85% | 95% | 85% | 83.33% |
+| v3 — lần 1 | 19/20 | 95% | 95% | 95% | 100.00% |
+| v3 — lần 2 | 20/20 | 100% | 100% | 100% | 100.00% |
+
+
+
+| Phiên bản | Thay đổi/giả thuyết được ghi nhận | Accuracy trước → sau |
+|---|---|---|
+| v0 | Đo hành vi baseline trước khi tối ưu. | — → 70% |
+| v1 | Bỏ chỉ dẫn gây đoán thông tin; bổ sung quy tắc hỏi lại và xác nhận. | 70% → 95% |
+| v2 | Làm rõ khi dùng/không dùng từng tool và quy ước tham số. | 95% → 85% |
+| v3 — lần 1 | Sau điều chỉnh, chỉ còn lỗi hỏi xác nhận không cần thiết ở R01. | 85% → 95% |
+| v3 — lần 2 | Prompt phân biệt thiếu tài khoản với tên người đã rõ; tách từ khóa khỏi thời gian và loại tin. | 95% → 100% |
+
+Các thay đổi và giả thuyết được đối chiếu với `artifacts/version_log.csv`, không xem mức tăng/giảm là bằng chứng nhân quả độc lập. Hash cho thấy cả prompt và tools đều đổi ở bước v1 → v2 và v2 → v3; cần thí nghiệm mỗi lần chỉ đổi một artifact để tách ảnh hưởng.
+
+**Định danh bằng chứng:**
+
+| Run | Prompt hash | Tools hash | File |
+|---|---|---|---|
+| v0 | `eb1c8179815bd79d34de7d326420bb99b3072e6e8ae96464c02d4411f905fc68` | `5b22a2476d41b989d5dc1e54f24ce7890e781909deb2f7afafb856ab53a6d7c0` | [runs/v0_B_base_openrouter_20261110T100630816017.json](https://github.com/doanhnguyen28/K5-L3A-DAY03-Ollama-Prompt-Function-Calling-Tool-Design-MCP-/blob/1a9054ab8216fa2ef80e30e2efde138213cc2bce/starter_v0/runs/v0_B_base_openrouter_20261110T100630816017.json) |
+| v1 | `347b7c87ef949eb30e9b347ca02f392594c7e1f3f85a2491f1b086e8af720274` | `5b22a2476d41b989d5dc1e54f24ce7890e781909deb2f7afafb856ab53a6d7c0` | [runs/v1_B_base_openrouter_20261110T102046612325.json](https://github.com/doanhnguyen28/K5-L3A-DAY03-Ollama-Prompt-Function-Calling-Tool-Design-MCP-/blob/1a9054ab8216fa2ef80e30e2efde138213cc2bce/starter_v0/runs/v1_B_base_openrouter_20261110T102046612325.json) |
+| v2 | `6329e62aa15cd021036fe3a5aea02a6fe8e621cecd94027d1628ca7c5234e086` | `20f89e93c623dd1652b0579bd7dbb5290ac28ffca35eb1dcf724c44667aa9330` | [runs/v2_B_base_openrouter_20261110T103033842772.json](https://github.com/doanhnguyen28/K5-L3A-DAY03-Ollama-Prompt-Function-Calling-Tool-Design-MCP-/blob/1a9054ab8216fa2ef80e30e2efde138213cc2bce/starter_v0/runs/v2_B_base_openrouter_20261110T103033842772.json) |
+| v3 lần 1 | `8f11da2094179feb0037687b800e169a406f41707f4f9ec8c6d5add828292575` | `a49d622ccf4c0bebc9294a262634db377cf9787252a3f81af30b82cfe85e0510` | [runs/v3_B_base_openrouter_20261110T104718293787.json](https://github.com/doanhnguyen28/K5-L3A-DAY03-Ollama-Prompt-Function-Calling-Tool-Design-MCP-/blob/1a9054ab8216fa2ef80e30e2efde138213cc2bce/starter_v0/runs/v3_B_base_openrouter_20261110T104718293787.json) |
+| v3 lần 2 | `4c296f7a161b93d5ef2bc2487328421f730c5aa41e6f5da8917e5afe7795fea8` | `a49d622ccf4c0bebc9294a262634db377cf9787252a3f81af30b82cfe85e0510` | [runs/v3_B_base_openrouter_20261110T105653574448.json](https://github.com/doanhnguyen28/K5-L3A-DAY03-Ollama-Prompt-Function-Calling-Tool-Design-MCP-/blob/1a9054ab8216fa2ef80e30e2efde138213cc2bce/starter_v0/runs/v3_B_base_openrouter_20261110T105653574448.json) |
+
 
 ## B2. Failure Analysis
 
-Use actual failures from `results[*].result.failures`.
+| Run / case | Nhãn case | Hành vi thực tế và nguyên nhân quan sát được | Hướng sửa |
+|---|---|---|---|
+| v0 / R08 | `out_of_scope` | Gọi `send` để đưa ra câu trả lời toán học; kỳ vọng không gọi tool. | Quy định câu ngoài phạm vi trả lời/từ chối bằng văn bản; không dùng tool gửi để trả lời chat. |
+| v0 / R10 | `missing_info` | Gọi `timeline(screenname="sama")` dù chưa có người/tài khoản. | Thiếu tài khoản phải `clarify(response_type="text")`; không tự chọn người. |
+| v0 / R11 | `missing_info` | Gọi `fetch` với URL tự điền `https://example.com/article`. | Chỉ đọc URL người dùng đã cung cấp hoặc có trong ngữ cảnh; thiếu URL thì hỏi lại. |
+| v0 / R12 | `wrong_boundary` | Gọi `send(text="Bản tin này")` thay vì hỏi xác nhận. | Dùng `clarify(response_type="yes_no")` trước hành động gửi. Log không có `confirmed=true`, không chứng minh đã gửi thành công. |
+| v0 / R13 | `wrong_tool` | Đã gọi cả `lookup` và `social_search`; sai `query="AI news"` và thiếu `topic="news"`. | Sửa quy ước tham số: `query="AI"`, `topic="news"`, `timeframe="day"`. Không chẩn đoán thành thiếu tool thứ hai. |
+| v0 / R14 | `out_of_scope` | Gọi `send` khi người dùng yêu cầu viết hàm Fibonacci. | Tách trả lời văn bản với hành động gửi ra ngoài. |
+| v1, v2 / M06 | `wrong_tool` | Gọi cả `lookup` và `social_search` khi người dùng đã hủy Twitter; mismatch là `extra_tool_call`. | Ưu tiên yêu cầu mới nhất; giữ chủ đề nhưng bỏ nền tảng đã bị hủy. |
+| v2 / R03, R13 | `wrong_tool` | Chọn đúng tool nhưng `query="tin tức AI hôm nay"` khác kỳ vọng `"AI"`; mismatch là `wrong_arg_value`. | Mô tả rõ việc chuyển thời gian và loại tin sang các trường riêng. |
+| v3 lần 1 / R01 | `wrong_tool` | Gọi `clarify(yes_no)` hỏi có lấy tweet của Sam Altman không, thay vì `timeline`. | Không xin xác nhận cho thao tác đọc khi đã rõ tài khoản; phân biệt tên đã biết với tài khoản hoàn toàn chưa được cung cấp. |
 
-| Case ID | Failure Type | Actual Tool Calls | What Failed | Fix |
-|---|---|---|---|---|
-| R08_out_of_scope | out_of_scope | [lookup] | Cố gọi tool cho bài toán tích phân | Thêm rule trong prompt: câu hỏi ngoài phạm vi research không gọi tool, trả lời trực tiếp |
-| R10_missing_handle | missing_info | [timeline] (đoán handle) | Tự đoán handle người nổi tiếng thay vì hỏi | Thêm rule: thiếu người/handle thì gọi clarify(response_type='text') |
-| R11_missing_url | missing_info | [fetch] (bịa URL) | Tự bịa URL khi user không cung cấp link | Thêm rule: thiếu URL thì gọi clarify(response_type='text') |
-| R12_confirm_before_send | wrong_boundary | [send(confirmed=true)] | Tự động gửi tin nhắn Telegram không xin phép | Thêm rule: hành động ghi/gửi phải xin xác nhận clarify(response_type='yes_no') |
-| R13_parallel_web_and_tweets | wrong_tool | [lookup] | Chỉ gọi 1 tool duy nhất (do starter ép 1 bước) | Thêm rule: gọi song song nhiều tool khi user yêu cầu cả web và mạng xã hội |
-| R14_out_of_scope_coding | out_of_scope | [lookup] | Cố gọi tool khi user nhờ viết code Python | Bổ sung rule out-of-scope xử lý câu hỏi lập trình |
-| M06_switch_tool | wrong_tool | [lookup, social_search] | Giữ lại tool cũ Twitter khi user đã bảo bỏ | Thêm rule theo dõi ngữ cảnh: ngừng gọi tool bị hủy khi user chuyển tool |
 
-## B3. Team Eval Cases
+## B3. Bộ đánh giá nhóm
 
-List the 10 cases added to `data/eval_group.json` (5 single turn + 5 multi turn).
+Bộ đánh giá gồm **10 case: 5 một lượt và 5 nhiều lượt**, bao phủ bốn tool mới: `dedupe_sources`, `date_filter`, `keyword_extract` và `source_audit`.
+
+Kết quả theo log `v4_B_group_openrouter_20261110T142031245476.json`, dataset `day04_v2_research_group_explicit_v2`, model `openrouter/free`: **10/10 PASS** về chọn tool và tham số.
 
 | Case ID | What It Tests | Expected Tool/Behavior | Result |
 |---|---|---|---|
-|  |  |  |  |
+| G01_dedupe_first | Một lượt: loại nguồn trùng, giữ bản đầu tiên. | Gọi `dedupe_sources`, truyền nguyên danh sách và `keep="first"`. | PASS |
+| G02_filter_dates | Một lượt: lọc theo khoảng ngày, tính cả hai ngày biên và bỏ mục thiếu ngày. | Gọi `date_filter`, từ `2026-11-01` đến `2026-11-05`, `include_undated=false`. | PASS |
+| G03_extract_keywords | Một lượt: trích từ khóa từ văn bản có sẵn. | Gọi `keyword_extract`, giữ nguyên văn bản và `max_keywords=3`. | PASS |
+| G04_audit_sources | Một lượt: phát hiện lỗi cấu trúc nguồn và kiểm tra HTTPS. | Gọi `source_audit`, `require_https=true`; không tự sửa dữ liệu đầu vào. | PASS |
+| G05_missing_account | Một lượt: hỏi lại khi chưa có tài khoản. | Gọi `clarify`, `response_type="text"`; không đoán handle. | PASS |
+| G06_dedupe_change_keep | Nhiều lượt: đổi yêu cầu từ giữ bản đầu sang giữ bản cuối. | Gọi `dedupe_sources`, giữ danh sách từ ngữ cảnh và cập nhật `keep="last"`. | PASS |
+| G07_filter_include_undated | Nhiều lượt: thay đổi yêu cầu để giữ cả mục thiếu ngày. | Gọi `date_filter`, giữ khoảng ngày và cập nhật `include_undated=true`. | PASS |
+| G08_switch_to_web | Nhiều lượt: hủy tìm Twitter, chuyển sang web và giữ chủ đề. | Chỉ gọi `lookup`, `query="robotics"`, `topic="news"`, `timeframe="week"`. | PASS |
+| G09_correct_handle_and_count | Nhiều lượt: sửa đồng thời tài khoản và số bài cần lấy. | Gọi `timeline`, `screenname="karpathy"`, `limit=2`. | PASS tool/args; API trả 403 khi thực thi. |
+| G10_confirm_send | Nhiều lượt: hỏi xác nhận trước khi gửi nội dung. | Gọi `clarify`, `response_type="yes_no"`; chưa gọi `send`. | PASS |
+
+**Nhận xét:** Cả 10 case đều chọn đúng tool và truyền đúng tham số theo evaluator. 
+
+
+### Kết quả tổng hợp
+
+| Chỉ số | Kết quả |
+|---|---:|
+| Tổng số case | 10 |
+| Case được đo | 10 |
+| Case PASS | **10/10** |
+| Provider error cases | 0 |
+| Case accuracy | **100%** |
+| Tool routing accuracy | **100%** |
+| Argument accuracy | **100%** |
+| Multiturn accuracy | **100%** |
+| Một lượt / nhiều lượt | **5/5 PASS / 5/5 PASS** |
+
+
+### Kết quả từng case
+
+| Case ID | Số lượt | Hành vi được kiểm tra và lời gọi thực tế | Chấm tool/args | Kết quả thực thi trong log |
+|---|---:|---|---|---|
+| G01_dedupe_first | 1 | `dedupe_sources`, truyền nguyên 3 nguồn, `keep="first"`. | PASS | Giữ Tin A và Tin B; loại 1 nguồn trùng. |
+| G02_filter_dates | 1 | `date_filter`, từ `2026-11-01` đến `2026-11-05`, `include_undated=false`. | PASS | Giữ A, B ở hai ngày biên; loại C ngoài khoảng và D thiếu ngày. |
+| G03_extract_keywords | 1 | `keyword_extract`, giữ nguyên văn bản, `max_keywords=3`. | PASS | Trả `robotics` (3), `automation` (2), `improves` (1). |
+| G04_audit_sources | 1 | `source_audit`, giữ nguyên dữ liệu lỗi, `require_https=true`. | PASS | Báo `non_https_url` cho nguồn đầu và `invalid_or_missing_url` cho nguồn sau. |
+| G05_missing_account | 1 | `clarify(response_type="text")`, hỏi tên/handle; không đoán tài khoản. | PASS | Trả câu hỏi và `awaiting_user=true`. |
+| G06_dedupe_change_keep | 3 | `dedupe_sources`, cập nhật `keep="last"`, giữ nguyên danh sách từ ngữ cảnh. | PASS | Giữ Tin A cập nhật và Tin B; loại 1 nguồn trùng. |
+| G07_filter_include_undated | 3 | `date_filter`, đổi `include_undated=true`, giữ khoảng ngày cũ. | PASS | Giữ A, B và D thiếu ngày; loại C ngoài khoảng. |
+| G08_switch_to_web | 3 | Chỉ `lookup(query="robotics", topic="news", timeframe="week", max_results=5)`; không gọi Twitter. | PASS | Trả danh sách kết quả web. |
+| G09_correct_handle_and_count | 3 | `timeline(screenname="karpathy", limit=2)` thay yêu cầu cũ. | PASS | Tool trả `HTTPError: 403 Forbidden` từ RapidAPI; chưa lấy được tweet. |
+| G10_confirm_send | 3 | `clarify(response_type="yes_no")`, hỏi xác nhận nội dung đã có; không gọi `send`. | PASS | Trả câu hỏi xác nhận và `awaiting_user=true`; không có hành động gửi. |
+
+
 
 ## B4. Live Chat Evidence
 
@@ -89,48 +168,19 @@ Use `transcripts/*.transcript.json`.
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-## B5. Bonus Evidence
 
-Only fill if your team did bonus.
+## B5. Reflection
 
-| Bonus | Evidence File | What Worked | Risk / Guardrail |
-|---|---|---|---|
-| send (Telegram) |  |  |  |
-| arXiv/company policy |  |  |  |
-| UI |  |  |  |
-| Tool unit tests (`tests/`) | `pytest` output |  |  |
+- **Which fixes belonged in `system_prompt.md`?**  
+  Các quy tắc hành vi chung: hỏi lại khi thiếu thông tin, không đoán tài khoản hoặc URL, không xin xác nhận cho thao tác đọc khi thông tin đã đủ, xin xác nhận trước khi gửi và ưu tiên yêu cầu mới nhất trong hội thoại. Khi người dùng hủy Twitter và chuyển sang web, agent phải ngừng gọi tool Twitter nhưng giữ chủ đề đang trao đổi.
 
-Tool unit tests: số test đã viết, số bug tìm được trong tool có sẵn (nếu có), và một ví dụ lỗi mà unit test bắt được nhưng eval không bắt được.
+- **Which fixes belonged in `tools.yaml`?**  
+  Làm rõ chức năng, khi dùng và không dùng từng tool; mô tả kiểu dữ liệu, giá trị hợp lệ và quy ước tham số. Ví dụ, `lookup` cần tách từ khóa khỏi `topic` và `timeframe`; các tool xử lý nguồn phải nhận nguyên danh sách, không để model tự sửa hoặc lọc trước. Cần phân biệt `source_audit` để báo lỗi cấu trúc với `dedupe_sources` để loại nguồn trùng.
 
-## B6. Reflection
+- **Which failure needed manual review instead of automatic grading?**  
+  G09 được chấm PASS vì gọi đúng `timeline(screenname="karpathy", limit=2)`, nhưng kết quả thực thi trả lỗi RapidAPI `403 Forbidden`. Vì vậy cần đọc `tool_results` để xác nhận agent có thực sự lấy được dữ liệu. Ngoài ra, các case không gọi tool cần kiểm tra nội dung trả lời, vì không gọi tool chưa chắc đã đáp ứng đúng yêu cầu.
 
-- Which fixes belonged in `system_prompt.md`?
-- Which fixes belonged in `tools.yaml`?
-- Which failure needed manual review instead of automatic grading?
-- What would you improve next?
+- **What would you improve next?**  
+  Xử lý lỗi RapidAPI 403 và kiểm tra lại việc lấy tweet; bổ sung transcript hội thoại thực tế. Giữ cố định bộ group hiện tại để chạy lặp, đồng thời thêm bộ kiểm thử với cách diễn đạt tự nhiên, ít chỉ dẫn hơn. Sau mỗi thay đổi, chạy lại cả base và group, lưu model cùng hash của artifact, và đánh giá riêng độ chính xác gọi tool với mức độ thành công khi thực thi.
 
-## B7. Small Local Model Challenge (bonus)
 
-Only fill if your team did the local model challenge.
-
-| Version | Model (provider) | Prompt/Tools | case_accuracy | tool_routing | argument | multiturn | Run File |
-|---|---|---|---|---|---|---|---|
-| v3 | (cloud) | v3 |  |  |  |  |  |
-| v3-... | (ollama) | v3 |  |  |  |  |  |
-| v3-... | (ollama) | v3 |  |  |  |  |  |
-| v4-local |  |  |  |  |  |  |  |
-| v5-local |  |  |  |  |  |  |  |
-
-Lỗi đặc thù của model nhỏ (đếm từ run JSON):
-
-| Failure Pattern | Count | Example Case | Fix Tried | Helped? |
-|---|---|---|---|---|
-| wrong / hallucinated tool |  |  |  |  |
-| invalid JSON args (`_invalid_json_arguments`) |  |  |  |  |
-| no tool call / answered directly |  |  |  |  |
-| missed `clarify` |  |  |  |  |
-| repeated / unnecessary calls |  |  |  |  |
-
-- Cái gì giúp model nhỏ gọi tool đúng hơn nhất? Bằng chứng?
-- Bản prompt tối ưu cho local chạy trên model cloud thì sao?
-- Khi nào nhóm sẽ chọn model local thay vì cloud cho agent này?
