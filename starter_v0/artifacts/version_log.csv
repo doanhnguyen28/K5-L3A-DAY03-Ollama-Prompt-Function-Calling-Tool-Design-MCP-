@@ -1,1 +1,6 @@
 version,author,changed_artifact,artifact_version,prompt_hash,tools_hash,reason,hypothesis,metric_before,metric_after,run_file
+v0,team,baseline,v0+peb1c8179815b+t5b22a2476d41,eb1c8179815b,5b22a2476d41,baseline,Đo hành vi chưa tối ưu trước khi sửa,,0.70,runs/v0_B_base_openrouter_20261110T100630816017.json
+v1,team,system_prompt.md,v1+p347b7c87ef94+t5b22a2476d41,347b7c87ef94,5b22a2476d41,Bỏ 3 chỉ dẫn xấu và thêm rule clarify/confirm,Bỏ đoán mò và thêm clarify khi thiếu info giúp tăng accuracy,0.70,0.95,runs/v1_B_base_openrouter_20261110T102046612325.json
+v2,team,tools.yaml,v2+p6329e62aa15c+t20f89e93c623,6329e62aa15c,20f89e93c623,Viết lại description chi tiết cho từng tool trong tools.yaml,Mô tả rõ when to use/when not to use và convention tham số,0.95,0.85,runs/v2_B_base_openrouter_20261110T103033842772.json
+v3,team,system_prompt.md,v3+p4c296f7a161b+ta49d622ccf4c,4c296f7a161b,a49d622ccf4c,Phân định rõ clarify vs timeline và rút gọn query lookup,Không hỏi xác nhận trên read query và chỉ clarify khi thiếu hẳn tên,0.85,1.00,runs/v3_B_base_openrouter_20261110T105653574448.json
+
