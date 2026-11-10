@@ -20,9 +20,21 @@ tools:
     parameters:
       type: object
       properties:
-        question: {type: string, default: "", description: "Câu hỏi"}
-        response_type: {type: string, enum: [text, yes_no, choice], default: "text", description: "Kiểu trả lời"}
-        options: {type: array, default: [], items: {type: string}, description: "Các lựa chọn"}
+        question: { type: string, default: "", description: "Câu hỏi" }
+        response_type:
+          {
+            type: string,
+            enum: [text, yes_no, choice],
+            default: "text",
+            description: "Kiểu trả lời",
+          }
+        options:
+          {
+            type: array,
+            default: [],
+            items: { type: string },
+            description: "Các lựa chọn",
+          }
       required: [question]
 
   - name: timeline
@@ -30,8 +42,8 @@ tools:
     parameters:
       type: object
       properties:
-        screenname: {type: string, default: "", description: "Tên tài khoản"}
-        limit: {type: integer, default: 5, description: "Số lượng"}
+        screenname: { type: string, default: "", description: "Tên tài khoản" }
+        limit: { type: integer, default: 5, description: "Số lượng" }
       required: [screenname]
 
   - name: social_search
@@ -39,9 +51,15 @@ tools:
     parameters:
       type: object
       properties:
-        query: {type: string, default: "", description: "Từ khóa"}
-        search_type: {type: string, enum: [Latest, Top], default: "Latest", description: "Cách sắp xếp"}
-        limit: {type: integer, default: 5, description: "Số lượng"}
+        query: { type: string, default: "", description: "Từ khóa" }
+        search_type:
+          {
+            type: string,
+            enum: [Latest, Top],
+            default: "Latest",
+            description: "Cách sắp xếp",
+          }
+        limit: { type: integer, default: 5, description: "Số lượng" }
       required: [query]
 
   - name: lookup
@@ -49,10 +67,22 @@ tools:
     parameters:
       type: object
       properties:
-        query: {type: string, default: "", description: "Truy vấn"}
-        topic: {type: string, enum: [general, news], default: "general", description: "Phân loại"}
-        timeframe: {type: string, enum: [day, week, month, year], default: "week", description: "Khoảng thời gian"}
-        max_results: {type: integer, default: 5, description: "Số kết quả"}
+        query: { type: string, default: "", description: "Truy vấn" }
+        topic:
+          {
+            type: string,
+            enum: [general, news],
+            default: "general",
+            description: "Phân loại",
+          }
+        timeframe:
+          {
+            type: string,
+            enum: [day, week, month, year],
+            default: "week",
+            description: "Khoảng thời gian",
+          }
+        max_results: { type: integer, default: 5, description: "Số kết quả" }
       required: [query]
 
   - name: fetch
@@ -60,7 +90,7 @@ tools:
     parameters:
       type: object
       properties:
-        url: {type: string, default: "", description: "Địa chỉ"}
+        url: { type: string, default: "", description: "Địa chỉ" }
       required: [url]
 
   - name: format
@@ -75,13 +105,19 @@ tools:
           items:
             type: object
             properties:
-              title: {type: string}
-              url: {type: string}
-              source: {type: string}
-              summary: {type: string}
-              section: {type: string}
-        template: {type: string, enum: [brief, sections, bullets, thread, daily_ai_vn], default: "sections", description: "Khuôn"}
-        headline: {type: string, default: "", description: "Tiêu đề"}
+              title: { type: string }
+              url: { type: string }
+              source: { type: string }
+              summary: { type: string }
+              section: { type: string }
+        template:
+          {
+            type: string,
+            enum: [brief, sections, bullets, thread, daily_ai_vn],
+            default: "sections",
+            description: "Khuôn",
+          }
+        headline: { type: string, default: "", description: "Tiêu đề" }
       required: [items, template]
 
   # ---------------- Bonus tools ----------------
@@ -90,8 +126,8 @@ tools:
     parameters:
       type: object
       properties:
-        text: {type: string, default: "", description: "Nội dung"}
-        confirmed: {type: boolean, default: false, description: "Cờ xác nhận"}
+        text: { type: string, default: "", description: "Nội dung" }
+        confirmed: { type: boolean, default: false, description: "Cờ xác nhận" }
       required: [text]
 
   - name: policy
@@ -99,9 +135,23 @@ tools:
     parameters:
       type: object
       properties:
-        query: {type: string, default: "", description: "Truy vấn"}
-        policy_area: {type: string, enum: [all, ai_research, source_citation, data_privacy, external_publishing, tool_usage], default: "all", description: "Nhóm"}
-        top_k: {type: integer, default: 3, description: "Số mục"}
+        query: { type: string, default: "", description: "Truy vấn" }
+        policy_area:
+          {
+            type: string,
+            enum:
+              [
+                all,
+                ai_research,
+                source_citation,
+                data_privacy,
+                external_publishing,
+                tool_usage,
+              ],
+            default: "all",
+            description: "Nhóm",
+          }
+        top_k: { type: integer, default: 3, description: "Số mục" }
       required: [query]
 
   - name: papers
@@ -109,9 +159,15 @@ tools:
     parameters:
       type: object
       properties:
-        query: {type: string, default: "", description: "Từ khóa"}
-        max_results: {type: integer, default: 5, description: "Số lượng"}
-        sort_by: {type: string, enum: [relevance, lastUpdatedDate, submittedDate], default: "relevance", description: "Sắp xếp"}
+        query: { type: string, default: "", description: "Từ khóa" }
+        max_results: { type: integer, default: 5, description: "Số lượng" }
+        sort_by:
+          {
+            type: string,
+            enum: [relevance, lastUpdatedDate, submittedDate],
+            default: "relevance",
+            description: "Sắp xếp",
+          }
       required: [query]
 
   - name: paper_text
@@ -119,7 +175,92 @@ tools:
     parameters:
       type: object
       properties:
-        arxiv_url: {type: string, default: "", description: "ID hoặc địa chỉ"}
-        max_pages: {type: integer, default: 5, description: "Số trang"}
-        max_chars: {type: integer, default: 8000, description: "Số ký tự"}
+        arxiv_url: { type: string, default: "", description: "ID hoặc địa chỉ" }
+        max_pages: { type: integer, default: 5, description: "Số trang" }
+        max_chars: { type: integer, default: 8000, description: "Số ký tự" }
       required: [arxiv_url]
+
+  - name: dedupe_sources
+    description: >-
+      Loại bỏ nguồn trùng từ danh sách bài báo/kết quả đã thu thập; ưu tiên URL
+      chuẩn hóa (bỏ UTM/fragment), không có URL thì dùng tiêu đề.
+      Dùng sau lookup/social_search/timeline để xóa trùng.
+      KHÔNG dùng để tìm kiếm thông tin mới hoặc xác minh nguồn.
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+          description: "Danh sách nguồn có title/url/summary (có thể thiếu một số field)."
+        keep:
+          type: string
+          enum: [first, last]
+          default: first
+          description: "Giữ bản đầu tiên hay cuối cùng của các nguồn trùng."
+      required: [items]
+
+  - name: date_filter
+    description: >-
+      Lọc danh sách bài báo đã có theo ngày phát hành, bao gồm ngày bắt đầu
+      và kết thúc. Hữu ích cho lọc nghiên cứu theo giai đoạn.
+      KHÔNG dùng thay lookup để tìm nguồn mới. Chỉ có thể lọc item có date,
+      published_date, published, created_at hoặc published_at ở dạng ISO/RFC.
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+          description: "Các item đã tìm kiếm, có trường date/published/published_at/published_date/created_at."
+        start_date:
+          type: string
+          description: "Ngày bắt đầu YYYY-MM-DD; để trống nếu không giới hạn."
+        end_date:
+          type: string
+          description: "Ngày kết thúc YYYY-MM-DD; để trống nếu không giới hạn."
+        include_undated:
+          type: boolean
+          default: false
+          description: "Có giữ item thiếu ngày phát hành không."
+      required: [items]
+
+  - name: source_audit
+    description: >-
+      Kiểm tra CHỈ chất lượng cấu trúc danh sách nguồn: title, URL hợp lệ,
+      summary, URL trùng, và HTTPS. KHÔNG xác minh độ đúng của tin,
+      độ uy tín tác giả hay bảo mật website. Dùng trước khi làm báo cáo.
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+          description: "Danh sách các nguồn cần kiểm tra cấu trúc."
+        require_https:
+          type: boolean
+          default: false
+          description: "Có báo lỗi URL dùng HTTP thay vì HTTPS không."
+      required: [items]
+
+  - name: keyword_extract
+    description: >-
+      Trích các từ khóa xuất hiện nhiều trong văn bản đã cung cấp bằng tần suất
+      đơn giản, không dùng AI hay Internet. Dùng khi user muốn liệt kê từ khóa
+      của văn bản. KHÔNG dùng cho tìm web hay phân tích ý nghĩa chuyên sâu.
+    parameters:
+      type: object
+      properties:
+        text:
+          type: string
+          description: "Văn bản để trích từ khóa."
+        max_keywords:
+          type: integer
+          default: 8
+          minimum: 1
+          maximum: 20
+          description: "Số lượng từ khóa tối đa (1..20)."
+      required: [text]
