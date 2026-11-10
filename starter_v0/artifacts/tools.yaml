@@ -205,11 +205,9 @@ tools:
       required: [arxiv_url]
 
   - name: dedupe_sources
-    description: >-
-      Loại bỏ nguồn trùng từ danh sách bài báo/kết quả đã thu thập; ưu tiên URL
-      chuẩn hóa (bỏ UTM/fragment), không có URL thì dùng tiêu đề.
-      Dùng sau lookup/social_search/timeline để xóa trùng.
-      KHÔNG dùng để tìm kiếm thông tin mới hoặc xác minh nguồn.
+    description: 'Loại các nguồn trùng trong danh sách người dùng đã cung cấp hoặc kết quả tool trước đó; giữ bản
+      đầu/cuối theo keep. Dùng khi yêu cầu bỏ trùng. KHÔNG dùng để rà soát trường bị thiếu, URL lỗi hoặc HTTPS: các
+      yêu cầu đó dùng source_audit. Không tự tìm thêm nguồn.'
     parameters:
       type: object
       properties:
@@ -217,20 +215,35 @@ tools:
           type: array
           items:
             type: object
-          description: "Danh sách nguồn có title/url/summary (có thể thiếu một số field)."
+            properties:
+              title:
+                type: string
+                description: Tiêu đề nguyên văn nếu có.
+              url:
+                type: string
+                description: URL nguyên văn, kể cả HTTP hoặc URL lỗi; không tự sửa.
+              summary:
+                type: string
+                description: Nội dung nguyên văn nếu có; không dịch hoặc viết lại.
+              source:
+                type: string
+                description: Nguồn nguyên văn nếu có.
+            additionalProperties: true
+          description: Toàn bộ danh sách gốc. Sao chép chính xác từng object và thứ tự; không dịch, sửa, tóm tắt,
+            lọc trước hoặc thay bằng [{}]. Không tự bổ sung trường thiếu. Giữ mọi trường khác nếu có.
         keep:
           type: string
-          enum: [first, last]
+          enum:
+          - first
+          - last
           default: first
-          description: "Giữ bản đầu tiên hay cuối cùng của các nguồn trùng."
-      required: [items]
-
+          description: Truyền first để giữ bản đầu hoặc last để giữ bản cuối theo yêu cầu mới nhất.
+      required:
+      - items
   - name: date_filter
-    description: >-
-      Lọc danh sách bài báo đã có theo ngày phát hành, bao gồm ngày bắt đầu
-      và kết thúc. Hữu ích cho lọc nghiên cứu theo giai đoạn.
-      KHÔNG dùng thay lookup để tìm nguồn mới. Chỉ có thể lọc item có date,
-      published_date, published, created_at hoặc published_at ở dạng ISO/RFC.
+    description: Lọc danh sách đã có theo khoảng ngày, bao gồm hai ngày biên. Có thể giữ mục thiếu hoặc không đọc
+      được ngày bằng include_undated. Không tự tìm nguồn mới. Truyền nguyên danh sách, kể cả mục ngoài khoảng ngày
+      hoặc thiếu ngày, để tool lọc.
     parameters:
       type: object
       properties:
@@ -238,24 +251,55 @@ tools:
           type: array
           items:
             type: object
-          description: "Các item đã tìm kiếm, có trường date/published/published_at/published_date/created_at."
+            properties:
+              title:
+                type: string
+                description: Tiêu đề nguyên văn nếu có.
+              url:
+                type: string
+                description: URL nguyên văn, kể cả HTTP hoặc URL lỗi; không tự sửa.
+              summary:
+                type: string
+                description: Nội dung nguyên văn nếu có; không dịch hoặc viết lại.
+              source:
+                type: string
+                description: Nguồn nguyên văn nếu có.
+              published_at:
+                type: string
+                description: Chuỗi ngày nguyên văn nếu có; giữ nguyên định dạng và ký tự.
+              published_date:
+                type: string
+                description: Chuỗi ngày nguyên văn nếu có; giữ nguyên định dạng và ký tự.
+              published:
+                type: string
+                description: Chuỗi ngày nguyên văn nếu có; giữ nguyên định dạng và ký tự.
+              date:
+                type: string
+                description: Chuỗi ngày nguyên văn nếu có; giữ nguyên định dạng và ký tự.
+              created_at:
+                type: string
+                description: Chuỗi ngày nguyên văn nếu có; giữ nguyên định dạng và ký tự.
+            additionalProperties: true
+          description: Toàn bộ danh sách gốc. Sao chép chính xác từng object và thứ tự; không dịch, sửa, tóm tắt,
+            lọc trước hoặc thay bằng [{}]. Không tự bổ sung trường thiếu. Giữ mọi trường khác nếu có.
         start_date:
           type: string
-          description: "Ngày bắt đầu YYYY-MM-DD; để trống nếu không giới hạn."
+          description: Ngày bắt đầu YYYY-MM-DD; để trống nếu không giới hạn.
         end_date:
           type: string
-          description: "Ngày kết thúc YYYY-MM-DD; để trống nếu không giới hạn."
+          description: Ngày kết thúc YYYY-MM-DD; để trống nếu không giới hạn.
         include_undated:
           type: boolean
           default: false
-          description: "Có giữ item thiếu ngày phát hành không."
-      required: [items]
-
+          description: Truyền tường minh true nếu yêu cầu giữ mục thiếu ngày; false nếu yêu cầu bỏ, kể cả khi trùng
+            mặc định.
+      required:
+      - items
   - name: source_audit
-    description: >-
-      Kiểm tra CHỈ chất lượng cấu trúc danh sách nguồn: title, URL hợp lệ,
-      summary, URL trùng, và HTTPS. KHÔNG xác minh độ đúng của tin,
-      độ uy tín tác giả hay bảo mật website. Dùng trước khi làm báo cáo.
+    description: 'Rà soát và báo lỗi cấu trúc: thiếu title/summary/URL, URL không hợp lệ, nguồn trùng, HTTP khi yêu
+      cầu HTTPS. Dùng khi yêu cầu kiểm tra hoặc báo vấn đề; KHÔNG thay bằng dedupe_sources, vì loại trùng không phải
+      kiểm tra cấu trúc. Giữ nguyên các trường lỗi hoặc bị thiếu để tool phát hiện. Không xác minh sự thật hay uy
+      tín nguồn.'
     parameters:
       type: object
       properties:
@@ -263,28 +307,43 @@ tools:
           type: array
           items:
             type: object
-          description: "Danh sách các nguồn cần kiểm tra cấu trúc."
+            properties:
+              title:
+                type: string
+                description: Tiêu đề nguyên văn nếu có.
+              url:
+                type: string
+                description: URL nguyên văn, kể cả HTTP hoặc URL lỗi; không tự sửa.
+              summary:
+                type: string
+                description: Nội dung nguyên văn nếu có; không dịch hoặc viết lại.
+              source:
+                type: string
+                description: Nguồn nguyên văn nếu có.
+            additionalProperties: true
+          description: Toàn bộ danh sách gốc. Sao chép chính xác từng object và thứ tự; không dịch, sửa, tóm tắt,
+            lọc trước hoặc thay bằng [{}]. Không tự bổ sung trường thiếu. Giữ mọi trường khác nếu có.
         require_https:
           type: boolean
           default: false
-          description: "Có báo lỗi URL dùng HTTP thay vì HTTPS không."
-      required: [items]
-
+          description: Có báo lỗi URL dùng HTTP thay vì HTTPS không.
+      required:
+      - items
   - name: keyword_extract
-    description: >-
-      Trích các từ khóa xuất hiện nhiều trong văn bản đã cung cấp bằng tần suất
-      đơn giản, không dùng AI hay Internet. Dùng khi user muốn liệt kê từ khóa
-      của văn bản. KHÔNG dùng cho tìm web hay phân tích ý nghĩa chuyên sâu.
+    description: Trích các từ khóa xuất hiện nhiều trong văn bản đã cung cấp bằng tần suất đơn giản, không dùng AI
+      hay Internet. Dùng khi user muốn liệt kê từ khóa của văn bản. KHÔNG dùng cho tìm web hay phân tích ý nghĩa chuyên
+      sâu.
     parameters:
       type: object
       properties:
         text:
           type: string
-          description: "Văn bản để trích từ khóa."
+          description: Văn bản để trích từ khóa.
         max_keywords:
           type: integer
           default: 8
           minimum: 1
           maximum: 20
-          description: "Số lượng từ khóa tối đa (1..20)."
-      required: [text]
+          description: Số lượng từ khóa tối đa (1..20).
+      required:
+      - text
