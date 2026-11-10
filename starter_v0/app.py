@@ -64,7 +64,7 @@ with st.sidebar:
     st.header("⚙️ Cấu hình")
     provider_name = st.selectbox("Provider", ["openrouter", "openai", "anthropic", "gemini", "ollama"])
     model = st.text_input("Model (trống = mặc định)").strip() or None
-    version = st.text_input("Version label", "v3")
+    version = st.text_input("Version label (sửa xong bấm Enter)", "v5")
     history_window = st.slider("History window", 1, 10, 5)
     max_rounds = st.slider("Max tool rounds", 1, 6, 4)
 

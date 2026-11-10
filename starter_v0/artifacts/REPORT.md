@@ -28,7 +28,7 @@ Research Agent hỗ trợ tìm tin trên web và Twitter/X, đọc nội dung t�
 
 > Dán link public để team khác mở thử ngay. Cách deploy nhanh bằng Cloudflare Tunnel xem README. Nếu deploy Vercel/Streamlit Cloud thì dán link đó.
 >
-> URL: 
+> URL: https://organ-clubs-polls-feel.trycloudflare.com
 
 ## A2. Công cụ trong phạm vi báo cáo
 
@@ -110,7 +110,7 @@ Các thay đổi và giả thuyết được đối chiếu với `artifacts/ver
 
 Bộ đánh giá gồm **10 case: 5 một lượt và 5 nhiều lượt**, bao phủ bốn tool mới: `dedupe_sources`, `date_filter`, `keyword_extract` và `source_audit`.
 
-Kết quả theo log `v4_B_group_openrouter_20261110T142031245476.json`, dataset `day04_v2_research_group_explicit_v2`, model `openrouter/free`: **10/10 PASS** về chọn tool và tham số.
+Kết quả theo log `runs/v4_B_group_openrouter_20261110T141310183368.json` (v4) và `runs/v5_B_group_openrouter_20261110T221546153984.json` (v5, bản nộp), dataset `day04_v2_research_group`, model `openai/gpt-4o-mini`: **10/10 PASS** về chọn tool và tham số ở cả hai lần chạy.
 
 | Case ID | What It Tests | Expected Tool/Behavior | Result |
 |---|---|---|---|
@@ -162,11 +162,41 @@ Kết quả theo log `v4_B_group_openrouter_20261110T142031245476.json`, dataset
 
 ## B4. Live Chat Evidence
 
-Use `transcripts/*.transcript.json`.
+### B4.1. `chat.py` — bản nộp v5
+
+Transcript: `transcripts/v5_openrouter_20261110T231208001759.transcript.json` · `artifact_version = v5+p4c296f7a161b+tf45ea6b2f037` · `openai/gpt-4o-mini`
 
 | Turn | User Request | Tool Calls | Version Evidence | Outcome |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| 1 | Tin tức AI hôm nay có gì nổi bật? | `lookup(query="AI", topic="news", timeframe="day")` | v5+p4c296f7a161b+tf45ea6b2f037 | Đúng tool và args; trả danh sách tin AI trong ngày kèm link nguồn. Lưu ý: câu hỏi tiếng Việt nhưng agent trả lời tiếng Anh. |
+| 2 | Tóm tắt bài này hộ mình | `clarify(response_type="text")` — "Bạn vui lòng cung cấp URL của bài viết…" | v5 | Thiếu URL nên hỏi lại, không bịa link; trạng thái `waiting_for_user`. |
+| 3 | https://openai.com/research/ | `fetch(url="https://openai.com/research/")` | v5 | Đọc đúng URL người dùng vừa cung cấp và tóm tắt nội dung trang. |
+| 4 | Đăng bản tin này lên Telegram giúp mình | `clarify(response_type="yes_no")` — "Bạn có chắc chắn muốn đăng…?" | v5 | Hành động ghi ra ngoài nên xin xác nhận trước; chưa gọi `send`. |
+| 5 | có gửi đi | `send(text="### Tóm tắt nội dung nghiên cứu của OpenAI…")` | v5 | Chỉ gọi `send` sau khi người dùng đồng ý; nội dung lấy từ bản tóm tắt ở lượt 3. Tool trả `RuntimeError: Missing TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID` vì nhóm chưa cấu hình Telegram, nên không gửi thật; agent báo lỗi trung thực. |
+
+### B4.2. UI Streamlit — v5
+
+Transcript: `transcripts/v5_openrouter_ui_20261110T230359622067.transcript.json` · `artifact_version = v5+p4c296f7a161b+tf45ea6b2f037`
+
+| Turn | User Request | Tool Calls | Version Evidence | Outcome |
+|---|---|---|---|---|
+| 1–2 | Lấy 3 tweet mới nhất của Andrej Karpathy | `timeline(screenname="karpathy", limit=3)` | v5 | Map đúng tên → handle `karpathy` và `limit=3`. RapidAPI trả `403 Forbidden`; agent báo lỗi, không bịa nội dung tweet. |
+| 3 | Cho mình các tweet phổ biến nhất về Claude | `social_search(query="Claude", search_type="Top", limit=5)` | v5 | Đúng tool và `search_type="Top"` cho "phổ biến nhất". RapidAPI `403`. |
+| 4 | Lọc giúp mình các bài từ 2026-11-01 đến 2026-11-05: [Tin A 11-01, Tin B 11-07, Tin C 11-04] | `date_filter(items=[…], start_date="2026-11-01", end_date="2026-11-05")` | v5 | Tool mới của nhóm chạy đúng: giữ Tin A, Tin C; loại Tin B ngoài khoảng. |
+| 5 | Đọc giúp mình bài báo đó | `clarify(response_type="text")` | v5 | Không có URL nên hỏi lại. |
+| 6 | Dịch câu "Good morning" sang tiếng Pháp giúp mình | (không gọi tool) | v5 | ⚠️ Không gọi tool nhưng trả lời luôn "Bonjour" thay vì từ chối yêu cầu ngoài phạm vi research. Một case `no_tool` sẽ chấm PASS dù hành vi chưa đúng — cần đọc nội dung câu trả lời. |
+
+### B4.3. `chat.py` — v3 (do A chạy, để đối chiếu)
+
+Transcript: `transcripts/v3_openrouter_20261110T113150973727.transcript.json` · `artifact_version = v3+p22edbe5efdd5+t5d540b419f0f` (cùng nội dung prompt/tools v3 nhưng file ở dạng CRLF nên hash khác `version_log.csv`)
+
+| Turn | User Request | Tool Calls | Version Evidence | Outcome |
+|---|---|---|---|---|
+| 1 | Tin tức AI hôm nay có gì nổi bật? | `lookup(query="AI", topic="news", timeframe="day")` | v3 (CRLF) | Đúng tool và args. |
+| 2 | Tóm tắt 5 tweet mới nhất giúp mình | `timeline(screenname="elonmusk", limit=5)` | v3 (CRLF) | ❌ Không nói tài khoản nhưng agent tự đoán `elonmusk` thay vì `clarify`. Cùng câu này là case R10 trong eval base và đã PASS — lỗi chỉ lộ ra khi chat nhiều lượt (lượt 1 về tin AI làm agent "đoán" theo ngữ cảnh). |
+| 3 | Đăng bản tin này lên Telegram giúp mình | `clarify(response_type="yes_no")` | v3 (CRLF) | Xin xác nhận trước khi gửi. |
+
+**Tổng kết B4:** Ở bản nộp v5, cả 5 lượt `chat.py` chọn đúng tool và args, bao gồm luồng hỏi lại → bổ sung URL và luồng xác nhận → gửi. Hai điểm eval tự động không bắt được, chỉ thấy khi chat live: (1) trả lời câu ngoài phạm vi thay vì từ chối (UI lượt 6), (2) tự đoán tài khoản khi thiếu thông tin trong ngữ cảnh nhiều lượt (v3 lượt 2). Lỗi 403 / thiếu env là lỗi cấu hình API, không phải lỗi routing.
 
 
 ## B5. Reflection
