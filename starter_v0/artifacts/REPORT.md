@@ -54,10 +54,10 @@ Fill from `artifacts/version_log.csv` and `runs/*.json`.
 
 | Version | Changed Artifact | Hypothesis | Metric Before | Metric After | Run File |
 |---|---|---|---:|---:|---|
-| v0 | baseline |  |  |  |  |
-| v1 |  |  |  |  |  |
-| v2 |  |  |  |  |  |
-| v3 |  |  |  |  |  |
+| v0 | baseline | Đo hành vi chưa tối ưu trước khi sửa | - | 0.70 | runs/v0_B_base_openrouter_20261110T100630816017.json |
+| v1 | system_prompt.md | Bỏ 3 chỉ dẫn xấu, thêm clarify khi thiếu info và confirm khi gửi | 0.70 | 0.95 | runs/v1_B_base_openrouter_20261110T102046612325.json |
+| v2 | tools.yaml | Viết lại description chi tiết (when to use/not) và convention tham số | 0.95 | 0.85 | runs/v2_B_base_openrouter_20261110T103033842772.json |
+| v3 | system_prompt.md | Phân định rõ clarify vs timeline, rút gọn query lookup | 0.85 | 1.00 | runs/v3_B_base_openrouter_20261110T105653574448.json |
 
 ## B2. Failure Analysis
 
@@ -65,7 +65,13 @@ Use actual failures from `results[*].result.failures`.
 
 | Case ID | Failure Type | Actual Tool Calls | What Failed | Fix |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| R08_out_of_scope | out_of_scope | [lookup] | Cố gọi tool cho bài toán tích phân | Thêm rule trong prompt: câu hỏi ngoài phạm vi research không gọi tool, trả lời trực tiếp |
+| R10_missing_handle | missing_info | [timeline] (đoán handle) | Tự đoán handle người nổi tiếng thay vì hỏi | Thêm rule: thiếu người/handle thì gọi clarify(response_type='text') |
+| R11_missing_url | missing_info | [fetch] (bịa URL) | Tự bịa URL khi user không cung cấp link | Thêm rule: thiếu URL thì gọi clarify(response_type='text') |
+| R12_confirm_before_send | wrong_boundary | [send(confirmed=true)] | Tự động gửi tin nhắn Telegram không xin phép | Thêm rule: hành động ghi/gửi phải xin xác nhận clarify(response_type='yes_no') |
+| R13_parallel_web_and_tweets | wrong_tool | [lookup] | Chỉ gọi 1 tool duy nhất (do starter ép 1 bước) | Thêm rule: gọi song song nhiều tool khi user yêu cầu cả web và mạng xã hội |
+| R14_out_of_scope_coding | out_of_scope | [lookup] | Cố gọi tool khi user nhờ viết code Python | Bổ sung rule out-of-scope xử lý câu hỏi lập trình |
+| M06_switch_tool | wrong_tool | [lookup, social_search] | Giữ lại tool cũ Twitter khi user đã bảo bỏ | Thêm rule theo dõi ngữ cảnh: ngừng gọi tool bị hủy khi user chuyển tool |
 
 ## B3. Team Eval Cases
 
